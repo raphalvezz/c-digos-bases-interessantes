@@ -1,0 +1,43 @@
+import cv2
+import numpy as np
+import os
+
+# Carregar a imagem de referência e a imagem de entrada
+reference_image = cv2.imread("reference.jpg")
+input_image = cv2.imread("input.jpg")
+
+# Encontre os pontos-chave da imagem de referência e da imagem de entrada
+reference_keypoints, reference_descriptors = cv2.AKAZE().detectAndCompute(reference_image, None)
+input_keypoints, input_descriptors = cv2.AKAZE().detectAndCompute(input_image, None)
+
+# Execute a correspondência de descritor de pontos-chave
+matcher = cv2.DescriptorMatcher_create(cv2.DescriptorMatcher_BRUTEFORCE_HAMMING)
+matches = matcher.match(reference_descriptors, input_descriptors)
+
+# Ordenar as correspondências por distância
+matches.sort(key = lambda x: x.distance)
+
+# Selecione as melhores correspondências
+num_good_matches = int(len(matches) * 0.15)
+good_matches = matches[:num_good_matches]
+
+# Extrair os pontos de correspondência de cada imagem
+reference_points = np.zeros((len(good_matches), 2), dtype=np.float32)
+input_points = np.zeros((len(good_matches), 2), dtype=np.float32)
+
+for i, match in enumerate(good_matches):
+    reference_points[i, :] = reference_keypoints[match.queryIdx].pt
+    input_points[i, :] = input_keypoints[match.trainIdx].pt
+
+# Encontre a transformação entre as imagens
+transformation_matrix, mask = cv2.findHomography(reference_points, input_points, cv2.RANSAC, 5.0)
+
+# Aplique a transformação à imagem de referência
+warped_image = cv2.warpPerspective(reference_image, transformation_matrix, (input_image.shape[1], input_image.shape[0]))
+
+# Combine as duas imagens
+result = cv2.addWeighted(input_image, 0.5, warped_image, 0.5, 0)
+
+# Exibe o resultado
+cv2.imshow("Result", result)
+cv2.waitKey(0)
