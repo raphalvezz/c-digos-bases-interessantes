@@ -41,3 +41,9 @@ result = cv2.addWeighted(input_image, 0.5, warped_image, 0.5, 0)
 # Exibe o resultado
 cv2.imshow("Result", result)
 cv2.waitKey(0)
+
+Este código faz a correspondência de pontos-chave entre a imagem de referência e a imagem de entrada, encontra a transformação entre as duas imagens com base nas correspondências e, em seguida, aplica a transformação à imagem de referência para que ela se
+
+
+
+
